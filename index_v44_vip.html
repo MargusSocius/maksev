@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>demo</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel
+<!-- read in javascript libraries for parsing csv: https://github.com/okfn/csv.js  -->
+<script src="jquery.js"></script> 
+<script src="csv.js"></script>
+</head>
+<body>
+
+<h1 style="font-family:verdana;color:red;"><b><i>See on csv faili töötlemise demo<i><b></h1>
+
+
+Sisesta ettevõtte nimi või reg. kood:
+<input type="text" id="filter" onkeypress="return filtreeri(event)">
+<button style="font-family:verdana;color:red;" type="button" onclick="filtreeri()">filtreeri!</button> 
+
+Tulemus ilmub siia:
+<p>
+
+<div style="font-family:courier;color:green;" id="result"></div>
+
+<p style="font-family:verdana;color:blue;">
+Andmed võetakse csv failist <a style="font-family:verdana;color:red;text-align: center" href="data.csv">data.csv</a>.
+<p>
+Programm kasutab <a href="https://github.com/okfn/csv.js">csv.js</a> teeki csv faili parsimiseks ja siis siin
+lehe lähtekoodis olev meie oma <tt>processdata</tt> programm, mida saad ise edasi ehitada.
+<script>
+
+// style color blue muudab pealkirja värvi 
+
+// processdata takes data rows, builds html string and shows it in the div above
+var sisu;
+
+function filtreeri() {  
+  sisu=document.getElementById("filter").value;
+  //alert(sisu);
+  drawdata();
+}
+
+function processdata(rows) {
+
+  var rownr, colnr, row, el;
+  var result;
+  
+  // build the result html string
+  result="<table>";
+  // loop over all rows
+  for(rownr=0; rownr<rows.length; rownr++) {    
+    row=rows[rownr];
+	if (!sisu || row[0]==sisu || row[1].includes(sisu.toUpperCase())) {
+		result=result+"\n<tr>";	
+		// loop over columns in one row
+		for(colnr=0; colnr<row.length; colnr++) {
+		  el=row[colnr];		  
+		  if (rownr==0) {
+			result=result+"<th><b>"+el+"</b></th>"; 
+		  } else {
+			result=result+"<td>"+el+"</td>";
+		  }				  
+		}
+		result=result+"</tr>";
+    }		 
+  }
+  // put the result html string into the div on the page
+  console.log(result);
+  document.getElementById("result").innerHTML=result;  
+}
+
+// take raw csv data, parse it into rows and then call processdata with the result
+// we use the CSV library from https://github.com/okfn/csv.js 
+
+function drawdata() {
+	CSV.fetch({
+		// several options to give input, by default we use the file data.csv
+		url: 'data.csv'
+		
+		// alternatively put raw data here like this:
+		// data: //"esimene;teine\na;1\nb;2"
+	// "aaa,bb,cc,dd\n"+
+	// "a1,as2,d$$d,11\n"+
+	// "443,22,2,2ö$$öö\n"
+		
+		// also an alternative
+		//file: an HTML 5 file object
+
+		// optional options about structure of the CSV file
+		// following the CSV Dialect Description Format 
+		// https://frictionlessdata.io/specs/csv-dialect/
+		/*
+		dialect: {
+		  ...
+		}
+		*/
+	  }
+	).done(function(dataset) {  
+	  // console.log(dataset); // optional debugging    
+	  var allrows;
+	  // put the dataset field list and dataset records into one array of all rows
+	  allrows=dataset.records;
+	  allrows.unshift(dataset.fields);  
+	  // call our program for building html
+	  processdata(allrows);
+	});
+}
+
+drawdata();
+
+</script>
+
+</body>
+</html> 
